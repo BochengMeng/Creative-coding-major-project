@@ -1,5 +1,10 @@
 let sourceImage;
 let artCanvas; // define artCanvas
+let ready = false; // track if art is ready
+
+//  sampling parameters to control the size and ignore the imperfection of the map image
+const SAMPLE_STEP = 25;
+const UNIT_SIZE = 30;
 
 function preload() {
   sourceImage = loadImage('Street.png'); 
@@ -9,78 +14,139 @@ function preload() {
 function setup() {
   createCanvas(1920, 1080); // create main canvas
   
-  // fit the wall background
+  // create graphics buffer for art generation
   artCanvas = createGraphics(600, 600);
+  artCanvas.pixelDensity(1);
   
+  noLoop(); // stop continuous drawing
   generateArt();
+  ready = true;
 }
 
 function draw() {
   background(255);
+  // Draw the image.
   drawBackground();
   
-  // display generated art in frame（fit the wall background）
-  image(artCanvas, 656, 152);
+  // display generated art in frame if ready
+  if (ready) {
+    image(artCanvas, 656, 152, 600, 600);
+  }
 }
 
-// base color like Mondrian
+// Click to regenerate artwork
+function mousePressed() {
+  generateArt();
+  redraw();
+}
+
+// base color like mondrian
 let colors = {
+  gray: '#d6d7d2',
   yellow: '#e1c927',
   red: '#ad372b',
   blue: '#314294',
-  gray: '#d6d7d2',
   bg: '#f3f4ef'
 };
 
 function generateArt() {
   // setup artCanvas 
   artCanvas.push();
+  artCanvas.clear();
   artCanvas.background(colors.bg);
   artCanvas.noStroke();
   
   // https://p5js.org/reference/p5/loadPixels/
   sourceImage.loadPixels();
-  const UNIT_SIZE = 25; 
-  const SAMPLE_STEP = 30; 
   
   // scale & blocksize
   const scaleX = artCanvas.width / sourceImage.width;
   const scaleY = artCanvas.height / sourceImage.height;
   const blockSize = UNIT_SIZE * Math.min(scaleX, scaleY);
-
+  
+  // create grid for storing colors
+  const rows = Math.ceil(sourceImage.height / SAMPLE_STEP);
+  const cols = Math.ceil(sourceImage.width / SAMPLE_STEP);
+  const grid = Array(rows).fill().map(function() {
+    return Array(cols).fill(null);
+  });
+  
   // sample pixels and draw colored squares
-  for (let y = 0; y < sourceImage.height; y += SAMPLE_STEP) {
-    for (let x = 0; x < sourceImage.width; x += SAMPLE_STEP) {
-      // Get pixel color from source image
+  for (let y = 0, row = 0; y < sourceImage.height; y += SAMPLE_STEP, row++) {
+    for (let x = 0, col = 0; x < sourceImage.width; x += SAMPLE_STEP, col++) {
+      // Get pixel color
       const idx = (y * sourceImage.width + x) * 4;
       const r = sourceImage.pixels[idx];
       const g = sourceImage.pixels[idx + 1];
       const b = sourceImage.pixels[idx + 2];
       
-      // Check if it's a road pixel (white)
+      // Check if it's a road pixel (white color)
       if (r > 240 && g > 240 && b > 240) {
-        // randomly choose a color with weighted probability (like mondiran's work)
-        const colorChoice = random(100);
-        let chosenColor;
-        
-        if (colorChoice < 10) {
-          chosenColor = colors.gray;
-        } else if (colorChoice < 70) {
-          chosenColor = colors.yellow;
-        } else if (colorChoice < 80) {
-          chosenColor = colors.red;
-        } else {
-          chosenColor = colors.blue;
-        }
-        
+        grid[row][col] = chooseColor(grid, row, col);
+      }
+    }
+  }
+  
+  // draw rectangles from grid
+  for (let y = 0, row = 0; y < sourceImage.height; y += SAMPLE_STEP, row++) {
+    for (let x = 0, col = 0; x < sourceImage.width; x += SAMPLE_STEP, col++) {
+      if (grid[row][col]) {
         // Draw colored rectangle
-        artCanvas.fill(chosenColor);
+        artCanvas.fill(grid[row][col]);
         artCanvas.rect(x * scaleX, y * scaleY, blockSize, blockSize);
       }
     }
   }
-
+  
   artCanvas.pop();
+}
+
+// choose color with probability and neighbor checking （like in mondian’s work）
+function chooseColor(grid, row, col) {
+  const avoid = [];
+  
+  // Check top neighbor（&& is like and in python）
+  if (row > 0 && grid[row - 1][col] && grid[row - 1][col] !== colors.yellow) {
+    avoid.push(grid[row - 1][col]);
+  }
+  
+  // Check left neighbor  
+  if (col > 0 && grid[row][col - 1] && grid[row][col - 1] !== colors.yellow) {
+    avoid.push(grid[row][col - 1]);
+  }
+  
+  // color weights
+  const weights = [
+    { color: colors.gray, weight: 10 },
+    { color: colors.yellow, weight: 60 },
+    { color: colors.red, weight: 10 },
+    { color: colors.blue, weight: 20 }
+  ];
+  
+  // filter out avoided colors
+  const available = weights.filter(function(w) {
+    return !avoid.includes(w.color);
+  });
+  
+  // default to yellow if no colors available（since the original work has lots of yellow）
+  if (available.length === 0) return colors.yellow;
+  
+  // calculate total weight
+  const total = available.reduce(function(sum, w) {
+    return sum + w.weight;
+  }, 0);
+  
+  // weighted random selection
+  let rand = random(total);
+  
+  for (let i = 0; i < available.length; i++) {
+    if (rand < available[i].weight) {
+      return available[i].color;
+    }
+    rand -= available[i].weight;
+  }
+  
+  return available[0].color;
 }
 
 // Background drawing function
