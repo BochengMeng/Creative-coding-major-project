@@ -163,17 +163,17 @@ function drawBackground() {
 
   // Floor strips
   fill('#A88974');
-  rect(1, 921, 1920, 8);
+  rect(0, 921, 1920, 8);
   fill('#DBBDA5');
-  rect(1, 929, 1920, 12);
+  rect(0, 929, 1920, 12);
   fill('#CEB1A1');
-  rect(1, 941, 1920, 20);
+  rect(0, 941, 1920, 20);
   fill('#DDC3AC');
-  rect(1, 961, 1920, 30);
+  rect(0, 961, 1920, 30);
   fill('#DDBFA7');
-  rect(1, 991, 1920, 40);
+  rect(0, 991, 1920, 40);
   fill('#E4C9B4');
-  rect(1, 1031, 1920, 50);
+  rect(0, 1031, 1920, 50);
 
   // layered rectangles to create a 3D frame effect shadow
   fill('#A88974');
@@ -181,7 +181,7 @@ function drawBackground() {
   fill('#E1E0DC');
   rect(620, 120, 666, 664);
   fill('#BFA89A');
-  rect(655, 150, 606, 622);
+  rect(656, 152, 606, 622);
   fill('#A88974');
   rect(656, 751, 600, 21);
 }
