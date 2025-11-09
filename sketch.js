@@ -4,7 +4,7 @@ function preload() {
   // load image https://p5js.org/reference/p5/preload/
 }
 function setup() {
-  createCanvas(600, 600);
+  createCanvas(1200, 1200);
 }
 function draw() {
   background(255);
