@@ -1,16 +1,86 @@
 let sourceImage;
+let artCanvas; // define artCanvas
+
 function preload() {
-  img = loadImage('Street.png');
+  sourceImage = loadImage('Street.png'); 
   // load image https://p5js.org/reference/p5/preload/
 }
+
 function setup() {
-  createCanvas(1920, 1200);
+  createCanvas(1920, 1080); // create main canvas
+  
+  // fit the wall background
+  artCanvas = createGraphics(600, 600);
+  
+  generateArt();
 }
+
 function draw() {
   background(255);
-  // Draw the image.
-  image(img, 0, 0);
-  drawBackground()
+  drawBackground();
+  
+  // display generated art in frame（fit the wall background）
+  image(artCanvas, 656, 152);
+}
+
+// base color like Mondrian
+let colors = {
+  yellow: '#e1c927',
+  red: '#ad372b',
+  blue: '#314294',
+  gray: '#d6d7d2',
+  bg: '#f3f4ef'
+};
+
+function generateArt() {
+  // setup artCanvas 
+  artCanvas.push();
+  artCanvas.background(colors.bg);
+  artCanvas.noStroke();
+  
+  // https://p5js.org/reference/p5/loadPixels/
+  sourceImage.loadPixels();
+  const UNIT_SIZE = 25; 
+  const SAMPLE_STEP = 30; 
+  
+  // scale & blocksize
+  const scaleX = artCanvas.width / sourceImage.width;
+  const scaleY = artCanvas.height / sourceImage.height;
+  const blockSize = UNIT_SIZE * Math.min(scaleX, scaleY);
+
+  // sample pixels and draw colored squares
+  for (let y = 0; y < sourceImage.height; y += SAMPLE_STEP) {
+    for (let x = 0; x < sourceImage.width; x += SAMPLE_STEP) {
+      // Get pixel color from source image
+      const idx = (y * sourceImage.width + x) * 4;
+      const r = sourceImage.pixels[idx];
+      const g = sourceImage.pixels[idx + 1];
+      const b = sourceImage.pixels[idx + 2];
+      
+      // Check if it's a road pixel (white)
+      if (r > 240 && g > 240 && b > 240) {
+        // randomly choose a color with weighted probability (like mondiran's work)
+        const colorChoice = random(100);
+        let chosenColor;
+        
+        if (colorChoice < 10) {
+          chosenColor = colors.gray;
+        } else if (colorChoice < 70) {
+          chosenColor = colors.yellow;
+        } else if (colorChoice < 80) {
+          chosenColor = colors.red;
+        } else {
+          chosenColor = colors.blue;
+        }
+        
+        // Draw colored rectangle
+        artCanvas.fill(chosenColor);
+        artCanvas.rect(x * scaleX, y * scaleY, blockSize, blockSize);
+      }
+    }
+  }
+
+  artCanvas.pop();
 }
 
 // Background drawing function
