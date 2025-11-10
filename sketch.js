@@ -175,7 +175,7 @@ function drawBackground() {
   fill('#E4C9B4');
   rect(0, 1030, 1920, 50);
 
-  // layered rectangles to create a 3D frame effect shadow
+  // layered rectangles to create a shadow effect
   fill('#A88974');
   rect(630, 132, 670, 677);
   fill('#E1E0DC');
