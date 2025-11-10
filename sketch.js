@@ -16,7 +16,7 @@ function setup() {
   
   // create graphics buffer for art generation
   artCanvas = createGraphics(600, 600);
-  artCanvas.pixelDensity(1);
+  artCanvas.pixelDensity(1); // https://p5js.org/reference/p5/loadPixels/ // Get the pixel density.
   
   noLoop(); // stop continuous drawing
   generateArt();
