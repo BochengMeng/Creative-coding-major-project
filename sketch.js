@@ -55,6 +55,11 @@ function generateArt() {
   artCanvas.clear();
   artCanvas.background(colors.bg);
   artCanvas.noStroke();
+
+    // First draw the large square layer
+  drawSVGBlocks();
+
+  // Then draw the road sampling layer.
   
   // https://p5js.org/reference/p5/loadPixels/
   sourceImage.loadPixels();
@@ -99,6 +104,50 @@ function generateArt() {
   }
   
   artCanvas.pop();
+}
+
+// Mondrian-style big blocks
+function drawSVGBlocks() {
+  const g = artCanvas;
+  g.noStroke();
+
+  const cls1 = '#314294';
+  const cls2 = '#ad372b';
+  const cls3 = '#e1c927';
+  const cls4 = '#d6d7d2';
+
+  const s = 1600 / 600;
+
+  function R(x, y, w, h, c) {
+    g.fill(c);
+    g.rect(Math.round(x / s), Math.round(y / s), Math.round(w / s), Math.round(h / s));
+  }
+
+  R(910, 305, 275, 420, cls1);
+  R(910, 390, 275, 230, cls2);
+  R(960, 450, 160, 100, cls3);
+  R(80, 1160, 160, 140, cls3);
+  R(230, 960, 150, 130, cls1);
+  R(1450, 1450, 165, 165, cls3);
+  R(730, 280, 95, 95, cls3);
+  R(385, 1300, 195, 310, cls2);
+  R(450, 1360, 60, 60, cls4);
+  R(1005, 1060, 175, 390, cls1);
+  R(1025, 1295, 125, 100, cls3);
+  R(150, 455, 225, 120, cls1);
+  R(280, 160, 205, 85, cls2);
+  R(1380, 70, 180, 120, cls1);
+  R(1400, 625, 210, 210, cls2);
+  R(1270, 865, 130, 190, cls3);
+  R(610, 945, 215, 215, cls3);
+  R(385, 740, 220, 90, cls2);
+  R(830, 730, 155, 155, cls2);
+  R(1470, 700, 80, 60, cls4);
+  R(280, 1000, 50, 50, cls4);
+  R(670, 1020, 80, 80, cls4);
+  R(320, 160, 80, 85, cls4);
+  R(1295, 915, 75, 75, cls4);
+  R(750, 305, 45, 45, cls4);
 }
 
 // choose color with probability and neighbor checking （like in mondian’s work）
