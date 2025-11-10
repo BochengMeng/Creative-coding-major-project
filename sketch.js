@@ -96,10 +96,12 @@ function generateArt() {
   for (let y = 0, row = 0; y < sourceImage.height; y += SAMPLE_STEP, row++) {
     for (let x = 0, col = 0; x < sourceImage.width; x += SAMPLE_STEP, col++) {
       if (grid[row][col]) {
-        // Draw colored rectangle
-        artCanvas.fill(grid[row][col]);
-        artCanvas.rect(x * scaleX, y * scaleY, blockSize, blockSize);
-      }
+      const bx = x * scaleX;
+      const by = y * scaleY;
+      const bw = blockSize;
+      const bh = blockSize;
+      feltifyRect(artCanvas, bx, by, bw, bh, grid[row][col]);
+    }
     }
   }
   
@@ -233,4 +235,61 @@ function drawBackground() {
   rect(656, 152, 606, 622);
   fill('#A88974');
   rect(656, 750, 600, 21);
+}
+// Hand-drawn style in visuals
+function feltifyRect(g, x, y, w, h, c) {
+  
+  // Draw the main color block
+  g.noStroke();
+  g.fill(c);
+  g.rect(x, y, w, h);
+
+  // slight shaking
+  const amp = 2.8;      
+  const freq = 0.025;   
+  const layers = 2;     
+
+  for (let l = 0; l < layers; l++) {
+    g.noFill();
+    g.stroke(red(c), green(c), blue(c), map(l, 0, layers - 1, 100, 50));
+    g.strokeWeight(map(l, 0, layers - 1, 2.2, 1));
+
+    g.beginShape();
+
+    // up
+    for (let i = 0; i <= 1; i += 0.02) {
+      const n = noise((x + i * w) * freq, (y + l * 50) * freq);
+      const offset = map(n, 0, 1, -amp, amp);
+      g.vertex(x + i * w, constrain(y + offset, y - amp, y + amp));
+    }
+
+    // right
+    for (let i = 0; i <= 1; i += 0.02) {
+      const n = noise((x + w + l * 20) * freq, (y + i * h) * freq);
+      const offset = map(n, 0, 1, -amp, amp);
+      g.vertex(constrain(x + w + offset, x + w - amp, x + w + amp), y + i * h);
+    }
+
+    // down
+    for (let i = 1; i >= 0; i -= 0.02) {
+      const n = noise((x + i * w) * freq, (y + h + l * 40) * freq);
+      const offset = map(n, 0, 1, -amp, amp);
+      g.vertex(x + i * w, constrain(y + h + offset, y + h - amp, y + h + amp));
+    }
+
+    // left
+    for (let i = 1; i >= 0; i -= 0.02) {
+      const n = noise((x + l * 30) * freq, (y + i * h) * freq);
+      const offset = map(n, 0, 1, -amp, amp);
+      g.vertex(constrain(x + offset, x - amp, x + amp), y + i * h);
+    }
+
+    g.endShape(CLOSE);
+  }
+
+  // soft glow outline
+  g.stroke(red(c), green(c), blue(c), 40);
+  g.strokeWeight(3);
+  g.noFill();
+  g.rect(x, y, w, h);
 }
