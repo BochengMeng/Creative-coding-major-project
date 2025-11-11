@@ -55,6 +55,11 @@ function generateArt() {
   artCanvas.clear();
   artCanvas.background(colors.bg);
   artCanvas.noStroke();
+
+    // First draw the large square layer
+  drawSVGBlocks();
+
+  // Then draw the road sampling layer.
   
   // https://p5js.org/reference/p5/loadPixels/
   sourceImage.loadPixels();
@@ -91,14 +96,68 @@ function generateArt() {
   for (let y = 0, row = 0; y < sourceImage.height; y += SAMPLE_STEP, row++) {
     for (let x = 0, col = 0; x < sourceImage.width; x += SAMPLE_STEP, col++) {
       if (grid[row][col]) {
-        // Draw colored rectangle
-        artCanvas.fill(grid[row][col]);
-        artCanvas.rect(x * scaleX, y * scaleY, blockSize, blockSize);
-      }
+      const bx = x * scaleX;
+      const by = y * scaleY;
+      const bw = blockSize;
+      const bh = blockSize;
+      feltifyRect(artCanvas, bx, by, bw, bh, grid[row][col], 1.2);
+    }
     }
   }
   
   artCanvas.pop();
+}
+
+// Mondrian-style big blocks
+function drawSVGBlocks() {
+  const g = artCanvas;
+  g.noStroke();
+
+  const cls1 = '#314294';
+  const cls2 = '#ad372b';
+  const cls3 = '#e1c927';
+  const cls4 = '#d6d7d2';
+
+  const s = 1600 / 600;
+
+  function R(x, y, w, h, c) {
+  // ampScale = 0.6 for smoother edge
+  feltifyRect(
+    g,
+    Math.round(x / s),
+    Math.round(y / s),
+    Math.round(w / s),
+    Math.round(h / s),
+    c,
+    0.6
+  );
+}
+
+  R(910, 305, 275, 420, cls1);
+  R(910, 390, 275, 230, cls2);
+  R(960, 450, 160, 100, cls3);
+  R(80, 1160, 160, 140, cls3);
+  R(230, 960, 150, 130, cls1);
+  R(1450, 1450, 165, 165, cls3);
+  R(730, 280, 95, 95, cls3);
+  R(385, 1300, 195, 310, cls2);
+  R(450, 1360, 60, 60, cls4);
+  R(1005, 1060, 175, 390, cls1);
+  R(1025, 1295, 125, 100, cls3);
+  R(150, 455, 225, 120, cls1);
+  R(280, 160, 205, 85, cls2);
+  R(1380, 70, 180, 120, cls1);
+  R(1400, 625, 210, 210, cls2);
+  R(1270, 865, 130, 190, cls3);
+  R(610, 945, 215, 215, cls3);
+  R(385, 740, 220, 90, cls2);
+  R(830, 730, 155, 155, cls2);
+  R(1470, 700, 80, 60, cls4);
+  R(280, 1000, 50, 50, cls4);
+  R(670, 1020, 80, 80, cls4);
+  R(320, 160, 80, 85, cls4);
+  R(1295, 915, 75, 75, cls4);
+  R(750, 305, 45, 45, cls4);
 }
 
 // choose color with probability and neighbor checking （like in mondian’s work）
@@ -184,4 +243,61 @@ function drawBackground() {
   rect(656, 152, 606, 622);
   fill('#A88974');
   rect(656, 750, 600, 21);
+}
+// Hand-drawn style in visuals
+function feltifyRect(g, x, y, w, h, c, ampScale = 1) {
+  
+  // Draw the main color block
+  g.noStroke();
+  g.fill(c);
+  g.rect(x, y, w, h);
+
+  // slight shaking
+  const amp = 2.8 * ampScale;     
+  const freq = 0.025;   
+  const layers = 2;     
+
+  for (let l = 0; l < layers; l++) {
+    g.noFill();
+    g.stroke(red(c), green(c), blue(c), map(l, 0, layers - 1, 100, 50));
+    g.strokeWeight(map(l, 0, layers - 1, 2.2, 1));
+
+    g.beginShape();
+
+    // up
+    for (let i = 0; i <= 1; i += 0.02) {
+      const n = noise((x + i * w) * freq, (y + l * 50) * freq);
+      const offset = map(n, 0, 1, -amp, amp);
+      g.vertex(x + i * w, constrain(y + offset, y - amp, y + amp));
+    }
+
+    // right
+    for (let i = 0; i <= 1; i += 0.02) {
+      const n = noise((x + w + l * 20) * freq, (y + i * h) * freq);
+      const offset = map(n, 0, 1, -amp, amp);
+      g.vertex(constrain(x + w + offset, x + w - amp, x + w + amp), y + i * h);
+    }
+
+    // down
+    for (let i = 1; i >= 0; i -= 0.02) {
+      const n = noise((x + i * w) * freq, (y + h + l * 40) * freq);
+      const offset = map(n, 0, 1, -amp, amp);
+      g.vertex(x + i * w, constrain(y + h + offset, y + h - amp, y + h + amp));
+    }
+
+    // left
+    for (let i = 1; i >= 0; i -= 0.02) {
+      const n = noise((x + l * 30) * freq, (y + i * h) * freq);
+      const offset = map(n, 0, 1, -amp, amp);
+      g.vertex(constrain(x + offset, x - amp, x + amp), y + i * h);
+    }
+
+    g.endShape(CLOSE);
+  }
+
+  // soft glow outline
+  g.stroke(red(c), green(c), blue(c), 40);
+  g.strokeWeight(3);
+  g.noFill();
+  g.rect(x, y, w, h);
 }
