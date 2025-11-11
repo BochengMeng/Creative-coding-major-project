@@ -178,7 +178,7 @@ function drawBackground() {
   // layered rectangles to create a shadow effect
   fill('#A88974');
   rect(630, 132, 670, 677);
-  fill('#E1E0DC');
+  fill('#E1E0DC'); 
   rect(620, 120, 666, 664);
   fill('#BFA89A');
   rect(656, 152, 606, 622);
