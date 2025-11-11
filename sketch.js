@@ -224,7 +224,7 @@ function drawBackground() {
   fill('#A88974');
   rect(0, 920, 1920, 8);
   fill('#DBBDA5');
-  rect(0, 930, 1920, 12);
+  rect(0, 928, 1920, 12);
   fill('#CEB1A1');
   rect(0, 940, 1920, 20);
   fill('#DDC3AC');
