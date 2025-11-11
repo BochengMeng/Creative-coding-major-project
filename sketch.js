@@ -100,7 +100,7 @@ function generateArt() {
       const by = y * scaleY;
       const bw = blockSize;
       const bh = blockSize;
-      feltifyRect(artCanvas, bx, by, bw, bh, grid[row][col]);
+      feltifyRect(artCanvas, bx, by, bw, bh, grid[row][col], 1.2);
     }
     }
   }
@@ -121,9 +121,17 @@ function drawSVGBlocks() {
   const s = 1600 / 600;
 
   function R(x, y, w, h, c) {
-    g.fill(c);
-    g.rect(Math.round(x / s), Math.round(y / s), Math.round(w / s), Math.round(h / s));
-  }
+  // ampScale = 0.6 for smoother edge
+  feltifyRect(
+    g,
+    Math.round(x / s),
+    Math.round(y / s),
+    Math.round(w / s),
+    Math.round(h / s),
+    c,
+    0.6
+  );
+}
 
   R(910, 305, 275, 420, cls1);
   R(910, 390, 275, 230, cls2);
@@ -237,7 +245,7 @@ function drawBackground() {
   rect(656, 750, 600, 21);
 }
 // Hand-drawn style in visuals
-function feltifyRect(g, x, y, w, h, c) {
+function feltifyRect(g, x, y, w, h, c, ampScale = 1) {
   
   // Draw the main color block
   g.noStroke();
@@ -245,7 +253,7 @@ function feltifyRect(g, x, y, w, h, c) {
   g.rect(x, y, w, h);
 
   // slight shaking
-  const amp = 2.8;      
+  const amp = 2.8 * ampScale;     
   const freq = 0.025;   
   const layers = 2;     
 
