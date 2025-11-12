@@ -1,7 +1,8 @@
 let sourceImage;
 let artCanvas; // define artCanvas
 let ready = false; // track if art is ready
-
+const baseWidth = 1920;// base canvas width
+const baseHeight = 1080;// base canvas height
 //  sampling parameters to control the size and ignore the imperfection of the map image
 const SAMPLE_STEP = 25;
 const UNIT_SIZE = 30;
@@ -12,7 +13,7 @@ function preload() {
 }
 
 function setup() {
-  createCanvas(1920, 1080); // create main canvas
+  createCanvas(baseWidth, baseWidth); // create main canvas
   
   // create graphics buffer for art generation
   artCanvas = createGraphics(600, 600);
@@ -21,7 +22,9 @@ function setup() {
   noLoop(); // stop continuous drawing
   generateArt();
   ready = true;
+  scaleToWindow();// scale to window size
 }
+
 
 function draw() {
   background(255);
@@ -300,4 +303,15 @@ function feltifyRect(g, x, y, w, h, c, ampScale = 1) {
   g.strokeWeight(3);
   g.noFill();
   g.rect(x, y, w, h);
+}
+function scaleToWindow() {
+  let scaleX = windowWidth / baseWidth;
+  let scaleY = windowHeight / baseHeight;
+  let scale = Math.min(scaleX, scaleY);
+   let canvasElement = document.querySelector('canvas');
+  canvasElement.style.transform = `scale(${scale})`;
+  canvasElement.style.transformOrigin = 'top left';
+}
+function windowResized() {
+  scaleToWindow();
 }
