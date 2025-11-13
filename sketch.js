@@ -1,11 +1,19 @@
 let sourceImage;
 let artCanvas; // define artCanvas
 let ready = false; // track if art is ready
+
 const baseWidth = 1920;// base canvas width
 const baseHeight = 1080;// base canvas height
+
 //  sampling parameters to control the size and ignore the imperfection of the map image
 const SAMPLE_STEP = 25;
 const UNIT_SIZE = 30;
+
+// shadow movement
+const SHADOW_MAX_OFFSET = 10; 
+const SHADOW_SMOOTHING = 0.06; 
+let currentShadowOffsetX = 0; 
+let currentShadowOffsetY = 0; 
 
 function preload() {
   sourceImage = loadImage('Street.png'); 
@@ -13,13 +21,17 @@ function preload() {
 }
 
 function setup() {
-  createCanvas(baseWidth, baseWidth); // create main canvas
-  
+  createCanvas(baseWidth, baseHeight); // create main canvas
+  pixelDensity(1);
+
+  //Content outside the element box is not shown https://www.w3schools.com/jsref/prop_style_overflow.asp
+  document.body.style.overflow = 'hidden';
+
   // create graphics buffer for art generation
   artCanvas = createGraphics(600, 600);
   artCanvas.pixelDensity(1); // https://p5js.org/reference/p5/loadPixels/ // Get the pixel density.
   
-  noLoop(); // stop continuous drawing
+  
   generateArt();
   ready = true;
   scaleToWindow();// scale to window size
@@ -27,20 +39,38 @@ function setup() {
 
 
 function draw() {
-  background(255);
-  // Draw the image.
-  drawBackground();
-  
-  // display generated art in frame if ready
-  if (ready) {
-    image(artCanvas, 656, 152, 600, 600);
-  }
+
+//resizing and fitting
+background(255);
+let zoom = 1.25;
+let zoomAnchorY = height * 0.75;
+push(); 
+translate(width / 2, zoomAnchorY / 2); 
+scale(zoom); 
+translate(-width / 2, -zoomAnchorY / 2); 
+
+// calculate mouse position 
+let targetOffsetX = map(mouseX, 0, width, -SHADOW_MAX_OFFSET, SHADOW_MAX_OFFSET); 
+let targetOffsetY = map(mouseY, 0, height, -SHADOW_MAX_OFFSET, SHADOW_MAX_OFFSET);
+
+// smoothly transition https://p5js.org/reference/p5/lerp/
+currentShadowOffsetX = lerp(currentShadowOffsetX, targetOffsetX, SHADOW_SMOOTHING);
+currentShadowOffsetY = lerp(currentShadowOffsetY, targetOffsetY, SHADOW_SMOOTHING);
+
+// pass offsets to the background function
+drawBackground(currentShadowOffsetX, currentShadowOffsetY); 
+
+// display generated art
+if (ready) {
+ image(artCanvas, 656, 152, 600, 600);
+ }
+ pop();
 }
 
 // Click to regenerate artwork
 function mousePressed() {
   generateArt();
-  redraw();
+  
 }
 
 // base color like mondrian
@@ -49,7 +79,7 @@ let colors = {
   yellow: '#e1c927',
   red: '#ad372b',
   blue: '#314294',
-  bg: '#f3f4ef'
+  bg: '#EBEAE6'
 };
 
 function generateArt() {
@@ -116,15 +146,10 @@ function drawSVGBlocks() {
   const g = artCanvas;
   g.noStroke();
 
-  const cls1 = '#314294';
-  const cls2 = '#ad372b';
-  const cls3 = '#e1c927';
-  const cls4 = '#d6d7d2';
-
-  const s = 1600 / 600;
+  const s = 1600 / 600; //cal canvas scale
 
   function R(x, y, w, h, c) {
-  // ampScale = 0.6 for smoother edge
+  // ampScale = 0.6 for smoother edge // update：change to 6, since they are much bigger than the small ones.
   feltifyRect(
     g,
     Math.round(x / s),
@@ -132,35 +157,35 @@ function drawSVGBlocks() {
     Math.round(w / s),
     Math.round(h / s),
     c,
-    0.6
+    6
   );
 }
 
-  R(910, 305, 275, 420, cls1);
-  R(910, 390, 275, 230, cls2);
-  R(960, 450, 160, 100, cls3);
-  R(80, 1160, 160, 140, cls3);
-  R(230, 960, 150, 130, cls1);
-  R(1450, 1450, 165, 165, cls3);
-  R(730, 280, 95, 95, cls3);
-  R(385, 1300, 195, 310, cls2);
-  R(450, 1360, 60, 60, cls4);
-  R(1005, 1060, 175, 390, cls1);
-  R(1025, 1295, 125, 100, cls3);
-  R(150, 455, 225, 120, cls1);
-  R(280, 160, 205, 85, cls2);
-  R(1380, 70, 180, 120, cls1);
-  R(1400, 625, 210, 210, cls2);
-  R(1270, 865, 130, 190, cls3);
-  R(610, 945, 215, 215, cls3);
-  R(385, 740, 220, 90, cls2);
-  R(830, 730, 155, 155, cls2);
-  R(1470, 700, 80, 60, cls4);
-  R(280, 1000, 50, 50, cls4);
-  R(670, 1020, 80, 80, cls4);
-  R(320, 160, 80, 85, cls4);
-  R(1295, 915, 75, 75, cls4);
-  R(750, 305, 45, 45, cls4);
+  R(910, 305, 275, 420, '#4267ba');
+  R(910, 390, 275, 230, '#ad372b');
+  R(960, 450, 160, 100, '#e1c927');
+  R(80, 1160, 160, 140, '#e1c927');
+  R(230, 960, 150, 130, "#4267ba");
+  R(1450, 1450, 165, 165, '#e1c927');
+  R(730, 280, 95, 95, '#e1c927');
+  R(385, 1300, 195, 310, '#ad372b');
+  R(450, 1360, 60, 60, '#d6d7d2');
+  R(1005, 1060, 175, 390, "#4267ba");
+  R(1025, 1295, 125, 100, '#e1c927');
+  R(150, 455, 225, 120, "#4267ba");
+  R(280, 160, 205, 85, '#ad372b');
+  R(1380, 70, 180, 120, "#4267ba");
+  R(1400, 625, 210, 210, '#ad372b');
+  R(1270, 865, 130, 190, '#e1c927');
+  R(610, 945, 215, 215, '#e1c927');
+  R(385, 740, 220, 90, '#ad372b');
+  R(830, 730, 155, 155, '#ad372b');
+  R(1470, 700, 80, 60, '#d6d7d2');
+  R(280, 1000, 50, 50, '#d6d7d2');
+  R(670, 1020, 80, 80, '#d6d7d2');
+  R(340, 160, 40, 85, '#d6d7d2');
+  R(1295, 915, 75, 75, '#d6d7d2');
+  R(750, 305, 45, 45, '#d6d7d2');
 }
 
 // choose color with probability and neighbor checking （like in mondian’s work）
@@ -211,41 +236,45 @@ function chooseColor(grid, row, col) {
   return available[0].color;
 }
 
-// Background drawing function
-function drawBackground() {
-  noStroke();
-  
-  // Wall
-  fill('#F5F4F0');
-  rect(0, 2, 1920, 910);
-  
-  // Floor line
-  fill('#6C4D38');
-  rect(0, 913, 1920, 8);
+// Background space drawing function
+function drawBackground(shadowOffsetX = 0, shadowOffsetY = 0) {
+ noStroke();
 
-  // Floor strips
-  fill('#A88974');
-  rect(0, 920, 1920, 8);
-  fill('#DBBDA5');
-  rect(0, 928, 1920, 12);
-  fill('#CEB1A1');
-  rect(0, 940, 1920, 20);
-  fill('#DDC3AC');
-  rect(0, 960, 1920, 30);
-  fill('#DDBFA7');
-  rect(0, 990, 1920, 40);
-  fill('#E4C9B4');
-  rect(0, 1030, 1920, 50);
+ // wall
+ fill('#F5F4F0');
+ rect(0, 2, 1920, 910);
 
-  // layered rectangles to create a shadow effect
-  fill('#A88974');
-  rect(630, 132, 670, 677);
-  fill('#E1E0DC'); 
-  rect(620, 120, 666, 664);
-  fill('#BFA89A');
-  rect(656, 152, 606, 622);
-  fill('#A88974');
-  rect(656, 750, 600, 21);
+ // floor line
+ fill('#6C4D38');
+ rect(0, 868, 1920, 8);
+
+ // floor strips
+ fill('#A88974');
+ rect(0, 875, 1920, 8);
+ fill('#DBBDA5');
+ rect(0, 883, 1920, 12);
+ fill('#CEB1A1');
+ rect(0, 895, 1920, 20);
+ fill('#DDC3AC');
+ rect(0, 915, 1920, 30);
+ fill('#DDBFA7');
+ rect(0, 945, 1920, 40);
+ fill('#E4C9B4');
+ rect(0, 985, 1920, 50);
+
+ // layered rectangles to create a shadow effect
+ 
+ fill('#A88974'); // deepest shadow (move)
+ rect(630 + shadowOffsetX * 0.6, 132 + shadowOffsetY * 0.6, 670, 677);
+ 
+ fill('#E1E0DC'); // light edge of the frame
+ rect(620, 120, 666, 664); 
+
+ fill('#BFA89A'); // frame border (move)
+ rect(658 + shadowOffsetX * 0.2, 153 + shadowOffsetY * 0.1, 606, 622); 
+
+ fill('#A88974'); // shadow at the bottom of the frame (move)
+ rect(658 + shadowOffsetX * 0.1, 153 + shadowOffsetY * 0.1, 604, 612);
 }
 // Hand-drawn style in visuals
 function feltifyRect(g, x, y, w, h, c, ampScale = 1) {
@@ -256,9 +285,9 @@ function feltifyRect(g, x, y, w, h, c, ampScale = 1) {
   g.rect(x, y, w, h);
 
   // slight shaking
-  const amp = 2.8 * ampScale;     
-  const freq = 0.025;   
-  const layers = 2;     
+  const amp = 0.36 * ampScale;     
+  const freq = 0.1;   
+  const layers = 6;     
 
   for (let l = 0; l < layers; l++) {
     g.noFill();
@@ -307,10 +336,14 @@ function feltifyRect(g, x, y, w, h, c, ampScale = 1) {
 function scaleToWindow() {
   let scaleX = windowWidth / baseWidth;
   let scaleY = windowHeight / baseHeight;
-  let scale = Math.min(scaleX, scaleY);
-   let canvasElement = document.querySelector('canvas');
-  canvasElement.style.transform = `scale(${scale})`;
-  canvasElement.style.transformOrigin = 'top left';
+  let scale = Math.max(scaleX, scaleY);
+  
+  let canvasElement = document.querySelector('canvas');
+  canvasElement.style.position = "absolute";
+  canvasElement.style.left = "50%";
+  canvasElement.style.top = "50%";
+  canvasElement.style.transformOrigin = "center center";
+  canvasElement.style.transform = `translate(-50%, -50%) scale(${scale})`;
 }
 function windowResized() {
   scaleToWindow();
