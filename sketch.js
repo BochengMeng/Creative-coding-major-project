@@ -5,7 +5,7 @@ let ready = false; // track if art is ready
 const baseWidth = 1920; // base canvas width
 const baseHeight = 1080; // base canvas height
 
-//  sampling parameters to control the size and ignore the imperfection of the map image
+// sampling parameters to control the size and ignore the imperfection of the map image
 const SAMPLE_STEP = 25;
 const UNIT_SIZE = 30;
 
@@ -56,12 +56,12 @@ function setup() {
   createCanvas(baseWidth, baseHeight); // create main canvas
   pixelDensity(1);
 
-  //Content outside the element box is not shown https://www.w3schools.com/jsref/prop_style_overflow.asp
+  // content outside the element box is not shown https://www.w3schools.com/jsref/prop_style_overflow.asp
   document.body.style.overflow = 'hidden';
 
   // create graphics buffer for art generation
   artCanvas = createGraphics(600, 600);
-  artCanvas.pixelDensity(1); // https://p5js.org/reference/p5/pixelDensity/ // Get the pixel density.
+  artCanvas.pixelDensity(1); // https://p5js.org/reference/p5/pixelDensity/
 
   generateArt();
   ready = true;
@@ -69,8 +69,7 @@ function setup() {
 }
 
 function draw() {
-
-  //resizing and fitting
+  // resizing and fitting
   background(255);
   let zoom = 1.25;
   let zoomAnchorY = height * 0.75;
@@ -177,7 +176,7 @@ function drawSVGBlocks() {
 
   // Layout is designed in a 1600 x 1600 coordinate space,
   // then scaled down into the 600 x 600 artCanvas.
-  const s = 1600 / 600; //cal canvas scale
+  const s = 1600 / 600; // canvas scale
 
   // clear old big blocks
   bigBlocks = [];
@@ -188,8 +187,7 @@ function drawSVGBlocks() {
     const by = Math.round(y / s);
     const bw = Math.round(w / s);
     const bh = Math.round(h / s);
-    // ampScale = 6 for smoother edge on big blocks
-    // update：change to 6, since they are much bigger than the small ones.
+    // ampScale = 6 for smoother edges on big blocks
     bigBlocks.push(new Block(bx, by, bw, bh, c, 6));
   }
 
@@ -225,21 +223,20 @@ function drawSVGBlocks() {
   }
 }
 
-// choose color with probability and neighbor checking （like in mondian’s work）
+// choose color with probability and neighbor checking
 function chooseColor(grid, row, col) {
   const avoid = [];
 
-  // Check top neighbor（&& is like and in python）
+  // top neighbor
   if (row > 0 && grid[row - 1][col] && grid[row - 1][col] !== colors.yellow) {
     avoid.push(grid[row - 1][col]);
   }
 
-  // Check left neighbor
+  // left neighbor
   if (col > 0 && grid[row][col - 1] && grid[row][col - 1] !== colors.yellow) {
     avoid.push(grid[row][col - 1]);
   }
 
-  // color weights
   const weights = [
     { color: colors.gray, weight: 10 },
     { color: colors.yellow, weight: 60 },
@@ -247,20 +244,16 @@ function chooseColor(grid, row, col) {
     { color: colors.blue, weight: 20 }
   ];
 
-  // filter out avoided colors
   const available = weights.filter(function (w) {
     return !avoid.includes(w.color);
   });
 
-  // default to yellow if no colors available（since the original work has lots of yellow）
   if (available.length === 0) return colors.yellow;
 
-  // calculate total weight
   const total = available.reduce(function (sum, w) {
     return sum + w.weight;
   }, 0);
 
-  // weighted random selection
   let rand = random(total);
 
   for (let i = 0; i < available.length; i++) {
@@ -300,7 +293,6 @@ function drawBackground(shadowOffsetX = 0, shadowOffsetY = 0) {
   rect(0, 985, 1920, 50);
 
   // layered rectangles to create a shadow effect
-
   fill('#A88974'); // deepest shadow (move)
   rect(630 + shadowOffsetX * 0.6, 132 + shadowOffsetY * 0.6, 670, 677);
 
@@ -316,13 +308,12 @@ function drawBackground(shadowOffsetX = 0, shadowOffsetY = 0) {
 
 // Hand-drawn style in visuals
 function feltingRect(g, x, y, w, h, c, ampScale = 1) {
-
-  // Draw the main color block
+  // main color block
   g.noStroke();
   g.fill(c);
   g.rect(x, y, w, h);
 
-  // slight shaking
+  // slight shaking outline
   const amp = 0.36 * ampScale;
   const freq = 0.1;
   const layers = 6;
@@ -345,21 +336,30 @@ function feltingRect(g, x, y, w, h, c, ampScale = 1) {
     for (let i = 0; i <= 1; i += 0.02) {
       const n = noise((x + w + l * 20) * freq, (y + i * h) * freq);
       const offset = map(n, 0, 1, -amp, amp);
-      g.vertex(constrain(x + w + offset, x + w - amp, x + w + amp), y + i * h);
+      g.vertex(
+        constrain(x + w + offset, x + w - amp, x + w + amp),
+        y + i * h
+      );
     }
 
     // down
     for (let i = 1; i >= 0; i -= 0.02) {
       const n = noise((x + i * w) * freq, (y + h + l * 40) * freq);
       const offset = map(n, 0, 1, -amp, amp);
-      g.vertex(x + i * w, constrain(y + h + offset, y + h - amp, y + h + amp));
+      g.vertex(
+        x + i * w,
+        constrain(y + h + offset, y + h - amp, y + h + amp)
+      );
     }
 
     // left
     for (let i = 1; i >= 0; i -= 0.02) {
       const n = noise((x + l * 30) * freq, (y + i * h) * freq);
       const offset = map(n, 0, 1, -amp, amp);
-      g.vertex(constrain(x + offset, x - amp, x + amp), y + i * h);
+      g.vertex(
+        constrain(x + offset, x - amp, x + amp),
+        y + i * h
+      );
     }
 
     g.endShape(CLOSE);
