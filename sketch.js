@@ -1,9 +1,10 @@
 let sourceImage;
-let artCanvas; // define artCanvas
+let artCanvas; // off-screen buffer for Mondrian art
 let ready = false; // track if art is ready
 
-const baseWidth = 1920; // base canvas width
-const baseHeight = 1080; // base canvas height
+// Fixed design space (virtual canvas) for layout
+const DESIGN_W = 1920; // design width
+const DESIGN_H = 1080; // design height
 
 // sampling parameters to control the size and ignore the imperfection of the map image
 const SAMPLE_STEP = 25;
@@ -53,7 +54,8 @@ function preload() {
 }
 
 function setup() {
-  createCanvas(baseWidth, baseHeight); // create main canvas
+  // canvas size follows the window
+  createCanvas(windowWidth, windowHeight);
   pixelDensity(1);
 
   // content outside the element box is not shown https://www.w3schools.com/jsref/prop_style_overflow.asp
@@ -65,20 +67,30 @@ function setup() {
 
   generateArt();
   ready = true;
-  scaleToWindow(); // scale to window size
 }
 
 function draw() {
-  // resizing and fitting
-  background(255);
-  let zoom = 1.25;
-  let zoomAnchorY = height * 0.75;
-  push();
-  translate(width / 2, zoomAnchorY / 2);
-  scale(zoom);
-  translate(-width / 2, -zoomAnchorY / 2);
+  // --- responsive scaling into a fixed 1920x1080 design space ---
+  const s = Math.max(width / DESIGN_W, height / DESIGN_H);
+  const offsetX = (width - DESIGN_W * s) / 2;
+  const offsetY = (height - DESIGN_H * s) / 2;
 
-  // calculate mouse position
+  background(255);
+
+  push();
+  // move and scale the whole 1920x1080 "virtual wall" into the real window
+  translate(offsetX, offsetY);
+  scale(s);
+
+  // --- camera zoom inside the design space (since the original one is too small) ---
+  let zoom = 1.25;
+  let zoomAnchorY = DESIGN_H * 0.75;
+  push();
+  translate(DESIGN_W / 2, zoomAnchorY / 2);
+  scale(zoom);
+  translate(-DESIGN_W / 2, -zoomAnchorY / 2);
+
+  // calculate mouse position (still using real window size)
   let targetOffsetX = map(mouseX, 0, width, -SHADOW_MAX_OFFSET, SHADOW_MAX_OFFSET);
   let targetOffsetY = map(mouseY, 0, height, -SHADOW_MAX_OFFSET, SHADOW_MAX_OFFSET);
 
@@ -86,14 +98,16 @@ function draw() {
   currentShadowOffsetX = lerp(currentShadowOffsetX, targetOffsetX, SHADOW_SMOOTHING);
   currentShadowOffsetY = lerp(currentShadowOffsetY, targetOffsetY, SHADOW_SMOOTHING);
 
-  // pass offsets to the background function
+  // pass offsets to the background function (draw gallery wall + frame)
   drawBackground(currentShadowOffsetX, currentShadowOffsetY);
 
-  // display generated art
+  // display generated art in the frame
   if (ready) {
     image(artCanvas, 656, 152, 600, 600);
   }
-  pop();
+
+  pop(); // end zoom
+  pop(); // end responsive scaling
 }
 
 // Click to regenerate artwork
@@ -101,6 +115,12 @@ function mousePressed() {
   generateArt();
 }
 
+// When the window size changes, resize the canvas and redraw
+function windowResized() {
+  resizeCanvas(windowWidth, windowHeight);
+}
+
+// ----------------------- Artwork generation -----------------------
 function generateArt() {
   // setup artCanvas
   artCanvas.push();
@@ -110,8 +130,6 @@ function generateArt() {
 
   // First draw the large square layer
   drawSVGBlocks();
-
-  // Then draw the road sampling layer.
 
   // https://p5js.org/reference/p5/loadPixels/
   sourceImage.loadPixels();
@@ -128,7 +146,7 @@ function generateArt() {
     return Array(cols).fill(null);
   });
 
-  // sample pixels and draw colored squares
+  // sample pixels and assign colors
   for (let y = 0, row = 0; y < sourceImage.height; y += SAMPLE_STEP, row++) {
     for (let x = 0, col = 0; x < sourceImage.width; x += SAMPLE_STEP, col++) {
       // Get pixel color
@@ -272,25 +290,25 @@ function drawBackground(shadowOffsetX = 0, shadowOffsetY = 0) {
 
   // wall
   fill('#F5F4F0');
-  rect(0, 2, 1920, 910);
+  rect(0, 2, DESIGN_W, 910);
 
   // floor line
   fill('#6C4D38');
-  rect(0, 868, 1920, 8);
+  rect(0, 868, DESIGN_W, 8);
 
   // floor strips
   fill('#A88974');
-  rect(0, 875, 1920, 8);
+  rect(0, 875, DESIGN_W, 8);
   fill('#DBBDA5');
-  rect(0, 883, 1920, 12);
+  rect(0, 883, DESIGN_W, 12);
   fill('#CEB1A1');
-  rect(0, 895, 1920, 20);
+  rect(0, 895, DESIGN_W, 20);
   fill('#DDC3AC');
-  rect(0, 915, 1920, 30);
+  rect(0, 915, DESIGN_W, 30);
   fill('#DDBFA7');
-  rect(0, 945, 1920, 40);
+  rect(0, 945, DESIGN_W, 40);
   fill('#E4C9B4');
-  rect(0, 985, 1920, 50);
+  rect(0, 985, DESIGN_W, 50);
 
   // layered rectangles to create a shadow effect
   fill('#A88974'); // deepest shadow (move)
@@ -370,23 +388,4 @@ function feltingRect(g, x, y, w, h, c, ampScale = 1) {
   g.strokeWeight(3);
   g.noFill();
   g.rect(x, y, w, h);
-}
-
-function scaleToWindow() {
-  let scaleX = windowWidth / baseWidth;
-  let scaleY = windowHeight / baseHeight;
-  let scale = Math.max(scaleX, scaleY);
-
-  // select the canvas element so can move and scale it with CSS. //https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/canvas
-  let canvasElement = document.querySelector('canvas');
-  canvasElement.style.position = "absolute";
-  canvasElement.style.left = "50%";
-  canvasElement.style.top = "50%";
-  // https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/transform
-  canvasElement.style.transformOrigin = "center center";
-  canvasElement.style.transform = `translate(-50%, -50%) scale(${scale})`;
-}
-
-function windowResized() {
-  scaleToWindow();
 }
