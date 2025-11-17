@@ -381,6 +381,7 @@ function scaleToWindow() {
   canvasElement.style.position = "absolute";
   canvasElement.style.left = "50%";
   canvasElement.style.top = "50%";
+  // https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/transform
   canvasElement.style.transformOrigin = "center center";
   canvasElement.style.transform = `translate(-50%, -50%) scale(${scale})`;
 }
