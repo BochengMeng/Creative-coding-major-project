@@ -377,6 +377,7 @@ function scaleToWindow() {
   let scaleY = windowHeight / baseHeight;
   let scale = Math.max(scaleX, scaleY);
 
+  // select the canvas element so can move and scale it with CSS. //https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/canvas
   let canvasElement = document.querySelector('canvas');
   canvasElement.style.position = "absolute";
   canvasElement.style.left = "50%";
