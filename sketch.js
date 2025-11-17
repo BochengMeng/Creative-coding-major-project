@@ -70,7 +70,7 @@ function setup() {
 }
 
 function draw() {
-  // --- responsive scaling into a fixed 1920x1080 design space ---
+  //  responsive scaling 
   const s = Math.max(width / DESIGN_W, height / DESIGN_H);
   const offsetX = (width - DESIGN_W * s) / 2;
   const offsetY = (height - DESIGN_H * s) / 2;
@@ -82,7 +82,7 @@ function draw() {
   translate(offsetX, offsetY);
   scale(s);
 
-  // --- camera zoom inside the design space (since the original one is too small) ---
+  // zoom inside the design space (since the original one is too small)
   let zoom = 1.25;
   let zoomAnchorY = DESIGN_H * 0.75;
   push();
@@ -254,26 +254,26 @@ function chooseColor(grid, row, col) {
   if (col > 0 && grid[row][col - 1] && grid[row][col - 1] !== colors.yellow) {
     avoid.push(grid[row][col - 1]);
   }
-
+  // each color has a weight
   const weights = [
     { color: colors.gray, weight: 10 },
     { color: colors.yellow, weight: 60 },
     { color: colors.red, weight: 10 },
     { color: colors.blue, weight: 20 }
   ];
-
+  // remove colors that we want to avoid (for example: same as neighbor)
   const available = weights.filter(function (w) {
     return !avoid.includes(w.color);
   });
-
+  // if no color left (all were avoided), fall back to yellow as default
   if (available.length === 0) return colors.yellow;
 
   const total = available.reduce(function (sum, w) {
     return sum + w.weight;
   }, 0);
-
+  // pick a random number from 0 to total
   let rand = random(total);
-
+  // walk through the available list and find which color matches this random number
   for (let i = 0; i < available.length; i++) {
     if (rand < available[i].weight) {
       return available[i].color;
